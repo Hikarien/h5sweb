@@ -15,7 +15,7 @@
                             <div>{{$t("message.live.device")}}</div>
                             <div class="liveview_colltitle">
                                 <div class="liveview_titleicon1" @click.stop="Refresh('device')"></div>
-                                <div @click.stop="headswitch1" class="liveview_titleicon"></div>
+                                <!-- <div @click.stop="headswitch1" class="liveview_titleicon"></div> -->
                             </div>
                         </div>
                     </template>
@@ -42,7 +42,7 @@
                         </span>
                     </el-tree>
                 </el-collapse-item>
-                <el-collapse-item name="1" id="headswitch1">
+                <!-- <el-collapse-item name="1" id="headswitch1">
                     <template slot="title">
                         <div style="display: flex;justify-content: space-between;width: 85%; align-items: center;">
                             <div>{{$t("message.live.Region")}}</div>
@@ -129,7 +129,7 @@
                             </div>
                         </span>
                     </el-tree>
-                </el-collapse-item>
+                </el-collapse-item> -->
             </el-collapse>
 		</div>
 		<!-- 右边视频栏 -->
@@ -222,7 +222,6 @@ export default {
 	mounted(){
         this.updateUI();
         $('#headswitch1').hide()
-        this.addWaterMarker();
         console.log(localStorage.getItem('watermarktoggle'),this.$store.state.Certificatetime)
 		if(localStorage.getItem('watermarktoggle')==null){
 			if(this.$store.state.Certificatetime=="true"){
@@ -856,18 +855,33 @@ export default {
             this.$http.get(url).then(result=>{
                 if(result.status == 200){
                     var srcData = [];
-                    var data=result.data;
-                    for(var i = 0; i < data.dev.length; i++){
-                        var item=data.dev[i];
-                        var srclevel=[];
-                        srclevel["strToken"]=item.strToken;
-                        srclevel["strName"]=item.strName;
-                        this.loadSrc(srclevel,srcData);
+                    if(Array.isArray(result.data.dev)){
+                        var data=result.data.dev;
+                        data.sort((a,b) =>{
+                            if(a.strName === b.strName)  return 0;
+
+                            return a.strName > b.strName ? 1:-1;
+                        });
+                        this.data = data.map(src =>{
+                            return {
+                                label:src.strName,
+                                iconclass:"iconfont  icon-kaiqishexiangtou1",
+                                children:[]
+                            }
+                        });
+                        for(var i = 0; i < data.length; i++){
+                            var item=data[i];
+                            var srclevel=[];
+                            srclevel["strToken"]=item.strToken;
+                            srclevel["strName"]=item.strName;
+
+                            this.loadSrc(srclevel,srcData, i);
+                        }
                     }
                 }
             })
         },
-        loadSrc(srclevel, srcData) {
+        loadSrc(srclevel, srcData, index) {
             var root = this.$store.state.IPPORT;
             let _this =this;
             
@@ -880,6 +894,7 @@ export default {
                     var srcGroup = {children: []};
                     srcGroup.label=srclevel.strName;
                     srcGroup.iconclass="iconfont  icon-kaiqishexiangtou1";
+                    let curChildren = [];
                     for(var i=0; i< data.src.length; i++){
                         var item = data.src[i];
                         // 主副流
@@ -926,10 +941,11 @@ export default {
                             newItem['disabled_me'] =true;
                             newItem['iconclass1'] = 'camera';
                         }
-
-                    srcGroup.children.push(newItem);
+                        curChildren.push(newItem);
                     }
-                    this.data.push(srcGroup);
+                    if(index >= 0 && index < this.data.length){
+                        this.data[index].children = curChildren;
+                    }
                 }
             }).catch(error => {
                 console.log('GetSrc failed', error);
@@ -1256,10 +1272,10 @@ export default {
         }
         .el-collapse{
             .el-collapse-item{
-                height: 40vh;
+                height: 60vh;
                 .el-collapse-item__wrap{
                     .el-collapse-item__content{
-                        height: 35vh;
+                        height: 80vh;
                         padding: 0 10px;
                         overflow: auto;
                         // ::-webkit-scrollbar{
