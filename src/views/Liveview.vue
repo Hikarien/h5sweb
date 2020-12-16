@@ -854,46 +854,40 @@ export default {
             //重组
             this.$http.get(url).then(result=>{
                 if(result.status == 200){
-                    var srcData = [];
-                    if(Array.isArray(result.data.dev)){
-                        var data=result.data.dev;
-                        data.sort((a,b) =>{
-                            if(a.strName === b.strName)  return 0;
+                    const deviceArr=result.data.dev;
+                    if(Array.isArray(deviceArr)){
 
-                            return a.strName > b.strName ? 1:-1;
-                        });
-                        this.data = data.map(src =>{
+                        deviceArr.sort((a,b)=>{
+                            if(a.strName === b.strName) return 0;
+
+                            return a.strName > b.strName? 1:-1;
+                        })
+
+                        this.data = deviceArr.map(src =>{
                             return {
-                                label:src.strName,
+                                label: src.strName,
                                 iconclass:"iconfont  icon-kaiqishexiangtou1",
                                 children:[]
                             }
-                        });
-                        for(var i = 0; i < data.length; i++){
-                            var item=data[i];
-                            var srclevel=[];
-                            srclevel["strToken"]=item.strToken;
-                            srclevel["strName"]=item.strName;
-
-                            this.loadSrc(srclevel,srcData, i);
+                        })
+                        for(let i = 0; i < deviceArr.length; i++){
+                            const item=deviceArr[i];
+                            this.loadSrc(item.strToken,i);
                         }
                     }
                 }
             })
         },
-        loadSrc(srclevel, srcData, index) {
+        loadSrc(srcToken, dataIndex) {
             var root = this.$store.state.IPPORT;
             let _this =this;
             
-            var url = root + "/api/v1/GetDeviceSrc?token="+ srclevel.strToken + "&session=" + this.$store.state.token;
+            const url = root + "/api/v1/GetDeviceSrc?token="+ srcToken + "&session=" + this.$store.state.token;
 
             this.$http.get(url).then(result => {
                 if (result.status == 200)
                 {
-                    var data =  result.data;
-                    var srcGroup = {children: []};
-                    srcGroup.label=srclevel.strName;
-                    srcGroup.iconclass="iconfont  icon-kaiqishexiangtou1";
+                    const data =  result.data;
                     let curChildren = [];
                     for(var i=0; i< data.src.length; i++){
                         var item = data.src[i];
@@ -941,11 +935,10 @@ export default {
                             newItem['disabled_me'] =true;
                             newItem['iconclass1'] = 'camera';
                         }
+
                         curChildren.push(newItem);
                     }
-                    if(index >= 0 && index < this.data.length){
-                        this.data[index].children = curChildren;
-                    }
+                    this.data[dataIndex].children = curChildren;
                 }
             }).catch(error => {
                 console.log('GetSrc failed', error);
