@@ -838,7 +838,9 @@ export default {
                         srcGroup.children.push(newItem);
                         }
                     }
-                    this.data.push(srcGroup);
+                    if(srcGroup.children.length > 0){
+                        this.data.push(srcGroup);
+                    }
                 } 
             })
 
@@ -863,22 +865,21 @@ export default {
                             return a.strName > b.strName? 1:-1;
                         })
 
-                        this.data = deviceArr.map(src =>{
-                            return {
-                                label: src.strName,
-                                iconclass:"iconfont  icon-kaiqishexiangtou1",
-                                children:[]
-                            }
-                        })
                         for(let i = 0; i < deviceArr.length; i++){
                             const item=deviceArr[i];
-                            this.loadSrc(item.strToken,i);
+                            this.data.push({
+                                token:item.strToken,
+                                label: item.strName,
+                                iconclass:"iconfont  icon-kaiqishexiangtou1",
+                                children:[]
+                            });
+                            this.loadSrc(item.strToken);
                         }
                     }
                 }
             })
         },
-        loadSrc(srcToken, dataIndex) {
+        loadSrc(srcToken) {
             var root = this.$store.state.IPPORT;
             let _this =this;
             
@@ -938,7 +939,10 @@ export default {
 
                         curChildren.push(newItem);
                     }
-                    this.data[dataIndex].children = curChildren;
+                    const curData = this.data.find(item => item.token === srcToken);
+                    if(curData){
+                        curData.children = curChildren;
+                    }
                 }
             }).catch(error => {
                 console.log('GetSrc failed', error);
